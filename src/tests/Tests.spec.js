@@ -2,23 +2,27 @@ import { htmlReport } from 'https://raw.githubusercontent.com/benc-uk/k6-reporte
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 import http from 'k6/http';
 import { check } from 'k6';
-import { Trend } from 'k6/metrics';
+import { Trend, Rate } from 'k6/metrics';
 
-export const getContactsDuration = new Trend('get_contacts', true);
+export const getEmpresaDuration = new Trend('get_empresa', true);
+export const rateStatusOkEmpresa = new Rate('status_ok_empresa', true);
 
 export const options = {
   thresholds: {
-    http_req_failed: ['rate<0.01'],
-    http_req_duration: ['p(95)<4000']
+    http_req_failed: ['rate<0.12'],
+    http_req_duration: ['p(95)<5700']
   },
   stages: [
-    { duration: '10s', target: 5 },
-    { duration: '10s', target: 10 },
-    { duration: '20s', target: 20 },
-    { duration: '30s', target: 30 },
-    { duration: '20s', target: 20 },
-    { duration: '10s', target: 10 },
-    { duration: '10s', target: 5 }
+    { duration: '30s', target: 10 },
+    { duration: '30s', target: 10 },
+    { duration: '30s', target: 50 },
+    { duration: '25s', target: 50 },
+    { duration: '30s', target: 120 },
+    { duration: '25s', target: 120 },
+    { duration: '30s', target: 220 },
+    { duration: '25s', target: 220 },
+    { duration: '30s', target: 300 },
+    { duration: '25s', target: 300 }
   ]
 };
 
@@ -34,7 +38,7 @@ export default function () {
 
   const params = {
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'text/html'
     }
   };
 
@@ -42,9 +46,10 @@ export default function () {
 
   const res = http.get(`${baseUrl}`, params);
 
-  getContactsDuration.add(res.timings.duration);
+  getEmpresaDuration.add(res.timings.duration);
+  rateStatusOkEmpresa.add(res.status === OK);
 
   check(res, {
-    'GET Contacts - Status 200': () => res.status === OK
+    'GET Empresa - Status 200': () => res.status === OK
   });
 }
